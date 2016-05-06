@@ -1,35 +1,14 @@
 <div class="container">
     <h1>NG2-formly example: Introduction</h1>
     <p>This is a small subset of the things that formly can do :-) See the other examples and the documentation for more.</p>
-    <hr>
-    <formly-form [model]="user" [fields]="userFields" (formSubmit)="console($event)" [changeEmitter]="Stream" [form]="form">
-        <button type="submit" class="btn btn-primary" (click)="submit(user)">Button</button>
-    </formly-form>
-    <hr>
-    <h3>Outside Formly</h3>
-    <input type="text" [(ngModel)]="user.email" (keyup)="changeEmail()" class="form-control">
-    <br><strong>FORM DATA:</strong><br><pre>{{user | json}}</pre><br>
-    <hr>
-    <button (click)="showEmail()" class="btn btn-success">Change Email</button>
-    <button (click)="hide()" class="btn btn-info">Hide Expression Toggle</button>
 
+    <h3>Form</h3>
+    <formly-form model="user" [fields]="fields"></formly-form>
 
-    <div style="margin-top:30px">
-        <small>
-            This is an example for the
-            <a href="https://formly-js.github.io/ng2-formly">ng2-formly</a>
-            project made with ♥ by
-            <strong>
-          <span *ngIf="!author.name || !author.url">
-            {{vm.author.name || 'anonymous'}}
-          </span>
-                <a ng-if="vm.author.url" href="{{author.url}}">
-                    {{author.name}}
-                </a>
-            </strong>
-            <br />
-            This example is running angular version "{{env.angularVersion}}" and formly version "{{env.formlyVersion}}"
-        </small>
-    </div>
+    <hr>
+
+    <h3>Single Fields</h3>
+    <formly-field model="user2" key="firstName" [field]="field"></formly-field>
+    <formly-field model="user2" key="lastName" [field]="field2"></formly-field>
 </div>
 

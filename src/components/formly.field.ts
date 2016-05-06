@@ -1,104 +1,67 @@
 import {
-    Component, OnInit, Input, Output, EventEmitter, DynamicComponentLoader, ElementRef,
-    ViewContainerRef, ViewChild, DoCheck, Directive
-} from "angular2/core";
-import {FormlyCommon} from "./formly.common.component";
-import {FormlyConfig} from "../services/formly.config";
-import {FormlyEventEmitter, FormlyPubSub} from "../services/formly.event.emitter";
+    Component, Input, ViewChild, Directive, Type,
+    DynamicComponentLoader, ElementRef, ViewContainerRef
+} from 'angular2/core';
+
+import * as _ from 'lodash';
+import {FormlyConfig, IFieldConfig} from '../main';
 
 @Directive({
-  selector: '[child-host]',
+    selector: '[child-host]',
 })
 export class DivComponent {
-  constructor(public viewContainer:ViewContainerRef){ }
+    constructor(public viewContainer:ViewContainerRef){ }
 }
 
 @Component({
     selector: "formly-field",
     template: `
         <div child-host #child></div>
-        <div *ngIf="field.template" [innerHtml]="field.template"></div>
-         <div class="formly-field"
-            *ngFor="let f of field.fieldGroup">
-            <formly-field [hide]="f.hideExpression" [model]="model" [key]="f.key" [form]="form" [field]="f" (changeFn)="changeFunction($event, f)" [ngClass]="f.className" [eventEmitter]="eventEmitter"></formly-field>
-        </div> 
     `,
-    directives: [FormlyField, DivComponent]
+    providers:[FormlyConfig],
+    directives: [DivComponent]
 })
-export class FormlyField extends FormlyCommon implements DoCheck {
-    // Inputs and Outputs
-    @Input() model;
-    @Input() key;
-    @Input() form;
-    @Input() field;
-    @Input() eventEmitter;
+export class FormlyField {
+    @Input() model: Object;
+    @Input() key: string;
+    @Input() field: IFieldConfig;
 
-    // Outputs
-    @Output() changeFn: EventEmitter<any> = new EventEmitter();
-
-    // Local Variables
-    directives;
-    hide;
-    update;
-    
     @ViewChild(DivComponent) myChild: DivComponent;
 
-    constructor(protected dcl: DynamicComponentLoader, protected elem: ElementRef, fc: FormlyConfig, protected ps: FormlyPubSub) {
-        super();
-        this.directives = fc.getDirectives();
-     }
-     
-     ngAfterViewInit() {
-        if (this.field.hideExpression) {
-            this.hide = true;
-        } else {
-            this.hide = false;
-        }
-        if (!!this.field.hideExpression || this.field.hideExpression === undefined && !this.field.template && !this.field.fieldGroup) {
-            this.update = new FormlyEventEmitter();
-            this.ps.setEmitter(this.key, this.update);
-            this.dcl.loadNextToLocation(this.directives[this.field.type], this.myChild.viewContainer)
-            .then(ref => {
-                ref.instance.model = this.model[this.field.key];
-                ref.instance.type = this.field.type;
-                ref.instance.options = this.field.templateOptions;
-                ref.instance.changeFn.subscribe((value) => {
-                    this.changeFn.emit(value);
-                });
-                ref.instance.key = this.key;
-                ref.instance.form = this.form;
-                ref.instance.update = this.update;
-            });
+    constructor(protected elem: ElementRef,
+                protected fc: FormlyConfig,
+                protected viewContainer: ViewContainerRef,
+                protected dcl: DynamicComponentLoader) {
+        console.log('constructor', this.field);
+    }
+
+    ngAfterViewInit() {
+        var template = <string>this.field.template
+
+        //templateManipulators(preWrapper)
+        //applyWrappers
+        //templateManipulators(postWrapper)
+
+        var dynamicComponent = this.createDynamicFieldComponent(template);
+        this.dcl.loadNextToLocation(dynamicComponent, this.myChild.viewContainer);
+    }
+
+    ngOnInit() {
+        if(this.field.type) {
+            let type = this.fc.getType(this.field.type);
+            _.extend(true, this.field, type);
         }
     }
-    toggleFn(cond) {
-        this.elem.nativeElement.style.display = cond ? "" : "none";
-        if (this.field.fieldGroup) {
-            for (let i = 0; i < this.field.fieldGroup.length; i++) {
-                this.ps.getEmitter([this.field.fieldGroup[i].key]).emit({
-                    key: "hidden",
-                    value: !cond
-                });
-            }
-        } else {
-            this.ps.getEmitter(this.field.key).emit({
-                key: "hidden",
-                value: !cond
-            });
+
+    protected createDynamicFieldComponent(template: string) : Type {
+        @Component({
+            selector: 'formly-dynamic-field',
+            template: template
+        })
+        class DynamicComponent {
+            constructor(public formlyField: FormlyField) {}
         }
-        this.eventEmitter.emit({
-            key: this.field.key,
-            value: !cond
-        });
-    }
-    ngDoCheck() {
-        if (this.field.hideExpression !== undefined && this.field.hideExpression !== this.hide)  {
-            this.hide = this.field.hideExpression;
-            if (this.hide) {
-                this.toggleFn(false);
-            } else {
-                this.toggleFn(true);
-            }
-        }
+
+        return DynamicComponent
     }
 }
