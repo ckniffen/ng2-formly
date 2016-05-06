@@ -51,8 +51,8 @@ export interface IFieldConfig {
 
 @Injectable()
 export class FormlyConfig implements IFormlyConfig {
-    protected types: { [path:string]: IFieldTypeConfig; };
-    protected wrappers: { [path:string]: IFieldWrapperConfig; };
+    protected types: { [path:string]: IFieldTypeConfig; } = {};
+    protected wrappers: { [path:string]: IFieldWrapperConfig; } = {};
 
     extras: Object;
 

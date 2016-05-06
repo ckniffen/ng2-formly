@@ -1,5 +1,5 @@
 import {
-    Component, Input, ViewChild, Directive, Type,
+    Component, Input, Inject, ViewChild, Directive, Type,
     DynamicComponentLoader, ElementRef, ViewContainerRef
 } from 'angular2/core';
 
@@ -9,7 +9,7 @@ import {FormlyConfig, IFieldConfig} from '../main';
 @Directive({
     selector: '[child-host]',
 })
-export class DivComponent {
+class DivComponent {
     constructor(public viewContainer:ViewContainerRef){ }
 }
 
@@ -18,7 +18,6 @@ export class DivComponent {
     template: `
         <div child-host #child></div>
     `,
-    providers:[FormlyConfig],
     directives: [DivComponent]
 })
 export class FormlyField {
@@ -29,7 +28,7 @@ export class FormlyField {
     @ViewChild(DivComponent) myChild: DivComponent;
 
     constructor(protected elem: ElementRef,
-                protected fc: FormlyConfig,
+                @Inject(FormlyConfig) protected fc: FormlyConfig,
                 protected viewContainer: ViewContainerRef,
                 protected dcl: DynamicComponentLoader) {
         console.log('constructor', this.field);
@@ -49,7 +48,7 @@ export class FormlyField {
     ngOnInit() {
         if(this.field.type) {
             let type = this.fc.getType(this.field.type);
-            _.extend(true, this.field, type);
+            _.defaultsDeep(this.field, type);
         }
     }
 
@@ -59,7 +58,10 @@ export class FormlyField {
             template: template
         })
         class DynamicComponent {
-            constructor(public formlyField: FormlyField) {}
+            field: IFieldConfig;
+            constructor(public formlyField: FormlyField) {
+                this.field = formlyField.field;
+            }
         }
 
         return DynamicComponent

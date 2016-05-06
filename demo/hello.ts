@@ -1,6 +1,7 @@
 /// <reference path="./../typings/ng2-formly.d.ts" />
-import {Component} from "angular2/core";
+import {Component, Inject} from "angular2/core";
 import {bootstrap} from "angular2/platform/browser";
+import {FormlyConfig} from "./../src/services/formly.config";
 import {FormlyField} from "./../src/components/formly.field";
 import {FormlyForm} from "./../src/components/formly.form";
 
@@ -13,6 +14,9 @@ import {FormlyForm} from "./../src/components/formly.form";
         FormlyField,
         FormlyForm
     ],
+    providers: [
+        FormlyConfig
+    ],
     selector: "hello-app",
     templateUrl: "../demo/template.html"
 })
@@ -24,34 +28,54 @@ export class HelloApp {
 
     field;
     field2;
+    field3;
     fields;
 
     user: any = {};
     user2: any = {};
 
-    constructor() {
+    constructor(@Inject(FormlyConfig) formlyConfig: FormlyConfig) {
+        formlyConfig.setType({
+            name: 'test',
+            template: 'this is a test: {{ field.key }} {{ field.templateOptions.color }}',
+            templateOptions: {
+                color: 'green'
+            }
+        })
+
         this.field = {
             key: "woo",
-            template: "Oh yeah! <i>{{ formlyField.field.key }}</i>",
-            color: "green"
+            type: 'test'
         };
 
         this.field2 = {
+            key: "woo2",
+            type: 'test',
+            templateOptions: {
+                color: "blue"
+            }
+        };
+
+        this.field3 = {
             key: "yep",
-            template: "Oh <i>{{ formlyField.field.key }} {{ formlyField.field.key }}!</i>",
-            color: "red"
+            template: "Oh <i>{{ field.key }} {{ field.key }}!</i>"
         };
 
         this.fields = [
             {
                 key: "woo",
-                template: "Oh yeah! <i>{{ formlyField.field.key }}</i>",
-                color: "green"
+                type: 'test'
+            },
+            {
+                key: "woo2",
+                type: 'test',
+                templateOptions: {
+                    color: "blue"
+                }
             },
             {
                 key: "yep",
-                template: "Oh <i>{{ formlyField.field.key }} {{ formlyField.field.key }}!</i>",
-                color: "red"
+                template: "Oh <i>{{ field.key }} {{ field.key }}!</i>"
             }
         ]
     }
