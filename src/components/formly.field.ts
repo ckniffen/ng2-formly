@@ -5,11 +5,12 @@ import {
 
 import * as _ from 'lodash';
 import {FormlyConfig, IFieldConfig} from '../main';
+import {IFieldWrapperConfig} from "../services/formly.config";
 
 @Directive({
     selector: '[child-host]',
 })
-class DivComponent {
+export class DivComponent {
     constructor(public viewContainer:ViewContainerRef){ }
 }
 
@@ -25,23 +26,23 @@ export class FormlyField {
     @Input() key: string;
     @Input() field: IFieldConfig;
 
-    @ViewChild(DivComponent) myChild: DivComponent;
+    @ViewChild(DivComponent) protected myChild: DivComponent;
 
     constructor(protected elem: ElementRef,
                 @Inject(FormlyConfig) protected fc: FormlyConfig,
                 protected viewContainer: ViewContainerRef,
                 protected dcl: DynamicComponentLoader) {
-        console.log('constructor', this.field);
     }
 
     ngAfterViewInit() {
-        var template = <string>this.field.template
+        let template = <string>this.field.template
+        let templateManipulators: Object = this.field.templateManipulators || {};
 
-        //templateManipulators(preWrapper)
-        //applyWrappers
-        //templateManipulators(postWrapper)
+        template = this.applyTemplateManipulatorsFactory(templateManipulators.preWrapper || [])(template);
+        template = this.applyWrappers(template);
+        template = this.applyTemplateManipulatorsFactory(templateManipulators.postWrapper || [])(template);
 
-        var dynamicComponent = this.createDynamicFieldComponent(template);
+        let dynamicComponent = this.createDynamicFieldComponent(template);
         this.dcl.loadNextToLocation(dynamicComponent, this.myChild.viewContainer);
     }
 
@@ -65,5 +66,23 @@ export class FormlyField {
         }
 
         return DynamicComponent
+    }
+
+    applyWrappers(template: string): string {
+        var wrappers: Array<IFieldWrapperConfig> = this.fc.getWrappersByType(this.field.type);
+
+        return wrappers.reduce((currentTemplate, wrapper) => {
+            return wrapper.template.replace('<formly-transclude></formly-transclude>', template);
+        }, template);
+    }
+
+    applyTemplateManipulatorsFactory(manipulators: Array<Function>): Function {
+        manipulators = manipulators || [];
+
+        return (template): string => {
+            return manipulators.reduce((currentTemplate, manipulator) => {
+                return manipulator.call(this, template, this.field);
+            }, template);
+        };
     }
 }

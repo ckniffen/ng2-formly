@@ -5,12 +5,18 @@ export interface IFieldTypeConfig {
     extends?: string;
 
     template?: string | Function;
+    wrapper?: Array<string>;
+    templateManipulators?: {
+        preWrapper: Array<Function>,
+        postWrapper: Array<Function>
+    };
 
-    defaultOptions?: Object;
+    templateOptions?: Object;
 }
 
 export interface IFieldWrapperConfig {
-    name: string;
+    name?: string;
+    template: string;
 }
 
 
@@ -42,6 +48,12 @@ export interface IFormlyConfig {
 export interface IFieldConfig {
     type?: string;
     template?: string | Function;
+    wrapper?: Array<string>;
+
+    templateManipulators?: {
+        preWrapper: Array<Function>,
+        postWrapper: Array<Function>
+    };
     defaultValue: any;
 
     templateOptions?: Object;
@@ -51,6 +63,8 @@ export interface IFieldConfig {
 
 @Injectable()
 export class FormlyConfig implements IFormlyConfig {
+    static DEFAULT_WRAPPER_NAME: string = 'default';
+
     protected types: { [path:string]: IFieldTypeConfig; } = {};
     protected wrappers: { [path:string]: IFieldWrapperConfig; } = {};
 
@@ -90,7 +104,7 @@ export class FormlyConfig implements IFormlyConfig {
     // }
 
     setWrapper(wrapper:IFieldWrapperConfig) {
-        this.setWrappers([wrapper]);
+        this.wrappers[wrapper.name || FormlyConfig.DEFAULT_WRAPPER_NAME] = wrapper;
     }
 
     setWrappers(wrappers:Array<IFieldWrapperConfig>) {
@@ -102,7 +116,18 @@ export class FormlyConfig implements IFormlyConfig {
     }
 
     getWrappersByType(name:string):Array<IFieldWrapperConfig> {
-        return null;
+        var wrappers: Array<IFieldWrapperConfig> = [];
+
+        var type = this.getType(name);
+        if(type.wrapper) {
+            wrappers = wrappers.concat(type.wrapper);
+        }
+
+        if(this.wrappers[FormlyConfig.DEFAULT_WRAPPER_NAME]) {
+            wrappers.push(this.getWrapper(FormlyConfig.DEFAULT_WRAPPER_NAME));
+        }
+
+        return wrappers;
     }
 
     removeWrappersForType(name:string):Array<IFieldWrapperConfig> {

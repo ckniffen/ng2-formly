@@ -38,9 +38,19 @@ export class HelloApp {
         formlyConfig.setType({
             name: 'test',
             template: 'this is a test: {{ field.key }} {{ field.templateOptions.color }}',
+            wrapper: ['woo'],
             templateOptions: {
                 color: 'green'
             }
+        })
+
+        formlyConfig.setWrapper({
+            template: 'Default Wrapper | <formly-transclude></formly-transclude> | Wrapper Default'
+        })
+
+        formlyConfig.setWrapper({
+            name: 'woo',
+            template: 'Woo Wrapper || <formly-transclude></formly-transclude> || Wrapper Woo'
         })
 
         this.field = {

@@ -3,14 +3,6 @@ import {ControlGroup, NgFormModel} from "angular2/common";
 import {IFieldConfig} from "../services/formly.config";
 import {FormlyField} from "../components/formly.field";
 
-
-@Directive({
-    selector: '[child-host]',
-})
-class DivComponent {
-    constructor(public viewContainer:ViewContainerRef){ }
-}
-
 @Component({
     selector: "formly-form",
     template: `
@@ -23,15 +15,12 @@ class DivComponent {
         </formly-field>
     `,
     directives: [
-        FormlyField,
-        DivComponent
+        FormlyField
     ]
 })
 export class FormlyForm {
     @Input() model: Object;
     @Input() fields: Array<IFieldConfig>
-
-    @ViewChild(DivComponent) myChild: DivComponent;
 
     constructor(protected compiler: ComponentResolver,
                 protected dcl: DynamicComponentLoader,
