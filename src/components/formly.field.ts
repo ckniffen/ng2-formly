@@ -1,38 +1,26 @@
 import {
     Component, Input, Inject, ViewChild, Directive, Type,
-    DynamicComponentLoader, ElementRef, ViewContainerRef
+    ComponentResolver, Injector, ViewContainerRef
 } from 'angular2/core';
 
 import * as _ from 'lodash';
 import {FormlyConfig, IFieldConfig} from '../main';
 import {IFieldWrapperConfig} from "../services/formly.config";
 
-@Directive({
-    selector: '[child-host]',
-})
-export class DivComponent {
-    constructor(public viewContainer:ViewContainerRef){ }
-}
-
 @Component({
     selector: "formly-field",
-    template: `
-        <div child-host #child></div>
-    `,
-    directives: [DivComponent]
+    template: ``
 })
 export class FormlyField {
     @Input() model: Object;
     @Input() key: string;
     @Input() field: IFieldConfig;
 
-    @ViewChild(DivComponent) protected myChild: DivComponent;
-
-    constructor(protected elem: ElementRef,
-                @Inject(FormlyConfig) protected fc: FormlyConfig,
-                protected viewContainer: ViewContainerRef,
-                protected dcl: DynamicComponentLoader) {
-    }
+    constructor(@Inject(FormlyConfig) protected fc: FormlyConfig,
+                protected view: ViewContainerRef,
+                protected compResolver:ComponentResolver,
+                protected injector: Injector
+    ) {}
 
     ngAfterViewInit() {
         let template = <string>this.field.template
@@ -43,7 +31,10 @@ export class FormlyField {
         template = this.applyTemplateManipulatorsFactory(templateManipulators.postWrapper || [])(template);
 
         let dynamicComponent = this.createDynamicFieldComponent(template);
-        this.dcl.loadNextToLocation(dynamicComponent, this.myChild.viewContainer);
+        this.compResolver.resolveComponent(dynamicComponent)
+            .then(factory => {
+                this.view.createComponent(factory, 0, this.injector);
+            })
     }
 
     ngOnInit() {
@@ -56,7 +47,7 @@ export class FormlyField {
     protected createDynamicFieldComponent(template: string) : Type {
         @Component({
             selector: 'formly-dynamic-field',
-            template: template
+            template
         })
         class DynamicComponent {
             field: IFieldConfig;

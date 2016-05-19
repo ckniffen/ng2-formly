@@ -119,8 +119,10 @@ export class FormlyConfig implements IFormlyConfig {
         var wrappers: Array<IFieldWrapperConfig> = [];
 
         var type = this.getType(name);
-        if(type.wrapper) {
-            wrappers = wrappers.concat(type.wrapper);
+        if(type && type.wrapper) {
+            type.wrapper.forEach((wrapperName) => {
+                wrappers.concat(this.getWrapper(wrapperName))
+            });
         }
 
         if(this.wrappers[FormlyConfig.DEFAULT_WRAPPER_NAME]) {
